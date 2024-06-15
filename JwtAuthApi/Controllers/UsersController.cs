@@ -14,12 +14,12 @@ namespace JwtAuthApi.Controllers;
 [ApiVersion(1.0)]
 [Route("api/[controller]")]
 [ApiController]
-public class UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, UserService userService, ILogger<UsersController> logger) 
+public class UsersController(UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, ITokenService tokenService, ILogger<UsersController> logger) 
     : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly ApplicationDbContext _dbContext = dbContext;
-    private readonly UserService _userService = userService;
+    private readonly ITokenService _tokenService = tokenService;
     private readonly ILogger<UsersController> _logger = logger;
 
     [HttpGet("All")]
@@ -87,7 +87,7 @@ public class UsersController(UserManager<ApplicationUser> userManager, Applicati
             return Unauthorized();
         }
 
-        var accessToken = _userService.CreateToken(userInDb);
+        var accessToken = _tokenService.CreateToken(userInDb);
         await _dbContext.SaveChangesAsync();
 
         return Ok(new AuthResponse

@@ -31,7 +31,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<ApplicationUser>().HasData(
             new ApplicationUser
             {
-                Id = "80c8b6b1-e2b6-45e8-b044-8f2178a90111", // primary key
+                //Id = "1", // primary key
                 UserName = adminName,
                 NormalizedUserName = adminEmail?.ToUpper(),
                 PasswordHash = hasher.HashPassword(null, adminPassword!),

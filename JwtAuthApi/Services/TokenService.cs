@@ -7,24 +7,23 @@ using JwtAuthApi.Models;
 
 namespace JwtAuthApi.Services;
 
-public class UserService(IConfiguration configuration, ILogger<UserService> logger) : IUserService
+public class TokenService(IConfiguration configuration, ILogger<TokenService> logger) : ITokenService
 {
-    private readonly ILogger<UserService> _logger = logger;
+    private readonly ILogger<TokenService> _logger = logger;
 
     private readonly IConfiguration _configuration = configuration;
 
     public string CreateToken(ApplicationUser user)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
         var expiration = DateTime.UtcNow.AddMinutes(Int16.Parse(_configuration["JwtTokenSettings:ExpirationMinutes"]!));
         var jwtSub = _configuration["JwtTokenSettings:JwtRegisteredClaimNamesSub"];
         var key = Encoding.UTF8.GetBytes(_configuration["JwtTokenSettings:SymmetricSecurityKey"]!);
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Issuer = _configuration.GetSection("JwtTokenSettings")["ValidIssuer"],
-            Audience = _configuration.GetSection("JwtTokenSettings")["ValidAudience"],
-            Subject = new ClaimsIdentity(new List<Claim>
-            {
+        var token = new JwtSecurityToken(
+            issuer: _configuration.GetSection("JwtTokenSettings")["ValidIssuer"],
+            audience: _configuration.GetSection("JwtTokenSettings")["ValidAudience"],
+            expires: expiration,
+            signingCredentials: new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            claims: [
                 new Claim(JwtRegisteredClaimNames.Sub, jwtSub!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
@@ -33,17 +32,14 @@ public class UserService(IConfiguration configuration, ILogger<UserService> logg
                 new Claim("user_id", user.Id),
                 new Claim("hobby", user.Hobby ?? ""),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
-            }),
-            Expires = expiration,
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        string userToken = tokenHandler.WriteToken(token);
+            ]
+        );
 
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
         _logger.LogInformation("JWT Token created");
         Console.Out.WriteLine("=====================");
-        Console.Out.WriteLine(userToken);
+        Console.Out.WriteLine(tokenString);
 
-        return userToken;
+        return tokenString;
     }
 }
