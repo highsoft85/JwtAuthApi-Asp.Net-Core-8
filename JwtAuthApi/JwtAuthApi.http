@@ -1,0 +1,21 @@
+@JwtAuthApi_HostAddress = https://localhost:7777
+
+GET {{JwtAuthApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+GET {{JwtAuthApi_HostAddress}}/api/customer
+
+###
+
+POST {{JwtAuthApi_HostAddress}}/api/user/Login
+Content-Type: application/json
+
+{
+  "userName": "user",
+  "email": "user@test.com",
+  "password": "user"
+}
+
+###
