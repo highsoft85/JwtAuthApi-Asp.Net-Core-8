@@ -15,4 +15,6 @@ public class RegistrationRequest
     public string? Password { get; set; }
 
     public Role Role { get; set; }
+
+    public string? Hobby { get; set; }
 }

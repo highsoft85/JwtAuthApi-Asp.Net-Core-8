@@ -1,21 +1,59 @@
-@JwtAuthApi_HostAddress = https://localhost:7777
-
-GET {{JwtAuthApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
+@JwtAuthApi_HostAddress = http://localhost:5555
 
 GET {{JwtAuthApi_HostAddress}}/api/customer
+Content-Type: application/json
 
 ###
 
-POST {{JwtAuthApi_HostAddress}}/api/user/Login
+GET {{JwtAuthApi_HostAddress}}/api/users/All
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDVoMDk4YmI4cmViZXJid3I0dnZiODk0NSIsImp0aSI6IjBiNmMwNTNlLTk1MjgtNGU4Zi04M2Y1LWE2YWRkOWE1OTJhZiIsImlhdCI6MTcxODQ3NDU0MiwidW5pcXVlX25hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJ1c2VyX2lkIjoiNmY2ZjQyMzMtYjRmNi00YTc1LWEyNTctNzZiNmJhZGUwYTA3IiwiaG9iYnkiOiIiLCJyb2xlIjoiQWRtaW4iLCJuYmYiOjE3MTg0NzQ1NDIsImV4cCI6MTcxODQ3NjM0MiwiaXNzIjoiRXhhbXBsZUlzc3VlciIsImF1ZCI6IlZhbGlkQXVkaWVuY2UifQ.wGT8AyLGKaNskOUpxvnP0kCi1_Rhr-pP00Dy3xPpfHk
+
+###
+
+POST {{JwtAuthApi_HostAddress}}/api/users/Register
 Content-Type: application/json
 
 {
-  "userName": "user",
-  "email": "user@test.com",
-  "password": "user"
+  "email": "user1@test.com",
+  "username": "user1",
+  "password": "user123",
+  "role": "User",
+  "hobby": "Reading"
+}
+###
+
+POST {{JwtAuthApi_HostAddress}}/api/users/Login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "administrator"
+}
+
+###
+
+GET {{JwtAuthApi_HostAddress}}/api/pages
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDVoMDk4YmI4cmViZXJid3I0dnZiODk0NSIsImp0aSI6IjhlNmUxNzhmLTIwY2YtNDJjMS05MDU5LWU4N2UzODJlYjYxOCIsImlhdCI6MTcxODQ3MDIyNCwidW5pcXVlX25hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJ1c2VyX2lkIjoiNmY2ZjQyMzMtYjRmNi00YTc1LWEyNTctNzZiNmJhZGUwYTA3IiwiaG9iYnkiOiIiLCJyb2xlIjoiQWRtaW4iLCJuYmYiOjE3MTg0NzAyMjQsImV4cCI6MTcxODQ3MjAyNCwiaXNzIjoiRXhhbXBsZUlzc3VlciIsImF1ZCI6IlZhbGlkQXVkaWVuY2UifQ.KbP2aV2rQrRIlM8MfLxa9Gy4yvKCZ1yC1CEtxgnBH-0
+
+###
+
+GET {{JwtAuthApi_HostAddress}}/api/pages/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDVoMDk4YmI4cmViZXJid3I0dnZiODk0NSIsImp0aSI6IjhlNmUxNzhmLTIwY2YtNDJjMS05MDU5LWU4N2UzODJlYjYxOCIsImlhdCI6MTcxODQ3MDIyNCwidW5pcXVlX25hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJ1c2VyX2lkIjoiNmY2ZjQyMzMtYjRmNi00YTc1LWEyNTctNzZiNmJhZGUwYTA3IiwiaG9iYnkiOiIiLCJyb2xlIjoiQWRtaW4iLCJuYmYiOjE3MTg0NzAyMjQsImV4cCI6MTcxODQ3MjAyNCwiaXNzIjoiRXhhbXBsZUlzc3VlciIsImF1ZCI6IlZhbGlkQXVkaWVuY2UifQ.KbP2aV2rQrRIlM8MfLxa9Gy4yvKCZ1yC1CEtxgnBH-0
+
+###
+
+POST {{JwtAuthApi_HostAddress}}/api/pages/new
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNDVoMDk4YmI4cmViZXJid3I0dnZiODk0NSIsImp0aSI6IjhlNmUxNzhmLTIwY2YtNDJjMS05MDU5LWU4N2UzODJlYjYxOCIsImlhdCI6MTcxODQ3MDIyNCwidW5pcXVlX25hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AdGVzdC5jb20iLCJ1c2VyX2lkIjoiNmY2ZjQyMzMtYjRmNi00YTc1LWEyNTctNzZiNmJhZGUwYTA3IiwiaG9iYnkiOiIiLCJyb2xlIjoiQWRtaW4iLCJuYmYiOjE3MTg0NzAyMjQsImV4cCI6MTcxODQ3MjAyNCwiaXNzIjoiRXhhbXBsZUlzc3VlciIsImF1ZCI6IlZhbGlkQXVkaWVuY2UifQ.KbP2aV2rQrRIlM8MfLxa9Gy4yvKCZ1yC1CEtxgnBH-0
+
+{
+  "id": "1",
+  "title": "title2",
+  "body": "body2",
+  "author": "author2"
 }
 
 ###

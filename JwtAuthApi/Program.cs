@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 using JwtAuthApi.Services;
-//using JwtAuthApi.Data;
 using JwtAuthApi.Models;
-using Microsoft.Extensions.Options;
+using JwtAuthApi.Data;
+using Microsoft.AspNetCore.Authorization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,19 +47,22 @@ builder.Services.AddSwaggerGen(option =>
                 Name = "Bearer",
                 In = ParameterLocation.Header,
             },
-            new string[]{ }
+            Array.Empty<string>() // = new string[]{ }            
         }
     });
 });
 
 builder.Services.AddProblemDetails();
-//builder.Services.AddApiVersioning();
+builder.Services.AddApiVersioning();
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 // Add DB Contexts
 // Move the connection string to user secrets for release
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContext") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found.")));
+//builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql("Host=localhost;Database=postgres;Username=postgres;Password=devpass"));
 
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<UserService, UserService>();
 
 // Support string to enum conversions
 builder.Services.AddControllers().AddJsonOptions(opt =>
@@ -69,7 +72,6 @@ builder.Services.AddControllers().AddJsonOptions(opt =>
 
 // Specify identity requirements (Role)
 // Must be added before .AddAuthentication otherwise a 404 is thrown on authorized endpoints
-/*
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -82,7 +84,6 @@ builder.Services
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
-*/
 
 builder.Services.AddCors(options =>
 {
@@ -111,15 +112,15 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtTokenSettings:ValidIssuer"],
         ValidAudience = builder.Configuration["JwtTokenSettings:ValidAudience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtTokenSettings:SymmetricSecurityKey"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtTokenSettings:SymmetricSecurityKey"]!))
     };
 });
-builder.Services.AddAuthorization();
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
-//});
-
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser().Build();
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+});
 
 var app = builder.Build();
 
@@ -138,6 +139,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 //app.MapGet("/signin", () => "User Authenticated Successfully!").RequireAuthorization();
 //app.MapGet("/signin", () => "User Authenticated Successfully!").RequireAuthorization("Admin");
 

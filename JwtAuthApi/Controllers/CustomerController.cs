@@ -8,8 +8,7 @@ namespace JwtAuthApi.Controllers;
 [ApiController]
 public class CustomerController : ControllerBase
 {
-    [HttpGet, Authorize]
-    //[HttpGet, Authorize(Roles = "Manager")] // In case of authorize with Role
+    [HttpGet]
     public IEnumerable<string> Get()
     {
         return new string[] { "John Doe", "Jane Doe" };
