@@ -4,6 +4,8 @@ using System.Security.Claims;
 using System.Text;
 
 using JwtAuthApi.Models;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 
 namespace JwtAuthApi.Services;
 
@@ -30,16 +32,54 @@ public class TokenService(IConfiguration configuration, ILogger<TokenService> lo
                 new Claim(ClaimTypes.Name, user.UserName!),
                 new Claim(ClaimTypes.Email, user.Email!),
                 new Claim("user_id", user.Id),
-                new Claim("hobby", user.Hobby ?? ""),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             ]
         );
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-        _logger.LogInformation("JWT Token created");
-        Console.Out.WriteLine("=====================");
-        Console.Out.WriteLine(tokenString);
 
         return tokenString;
+    }
+
+    public string CreateRefreshToken()
+    {
+        var randomNumber = new byte[32];
+        var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+
+    public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+    {
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ClockSkew = TimeSpan.Zero,          // If you want to allow a certain amount of clock drift, set that here
+            ValidateIssuer = true,              // Validate the JWT Issuer (iss) claim
+            ValidateAudience = true,            // Validate the JWT Audience (aud) claim
+            ValidateLifetime = false,           // Validate the token expiry
+            ValidateIssuerSigningKey = true,    // The signing key must match!
+            ValidIssuer = configuration["JwtTokenSettings:ValidIssuer"],
+            ValidAudience = configuration["JwtTokenSettings:ValidAudience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtTokenSettings:SymmetricSecurityKey"]!))
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+        // JwtSecurityToken jwtSecurityToken = securityToken as JwtSecurityToken;
+
+//        if (jwtSecurityToken == null || jwtSecurityToken?.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+//            throw new SecurityTokenException("Invalid token");
+
+        if (securityToken == null)
+        {
+            throw new SecurityTokenException("Invalid token");
+        }
+
+        return principal;
+    }
+
+    public Object? GetConfigurationValue(string key)
+    {
+        return configuration[key];
     }
 }

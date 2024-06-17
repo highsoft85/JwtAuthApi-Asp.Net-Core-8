@@ -8,6 +8,7 @@ using JwtAuthApi.Models;
 using JwtAuthApi.Data;
 using Asp.Versioning;
 using Azure.Core;
+using System.Security.Claims;
 
 namespace JwtAuthApi.Controllers;
 
@@ -88,12 +89,17 @@ public class UsersController(UserManager<ApplicationUser> userManager, Applicati
         }
 
         var accessToken = _tokenService.CreateToken(userInDb);
-        await _dbContext.SaveChangesAsync();
+        var refreshToken = _tokenService.CreateRefreshToken();
+
+        managedUser.RefreshToken = refreshToken;
+        managedUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(Convert.ToInt16(_tokenService.GetConfigurationValue("JwtTokenSettings:RefreshExpirationDays")));
+        await _userManager.UpdateAsync(managedUser);
 
         return Ok(new AuthResponse
         {
             Email = userInDb.Email,
             Token = accessToken,
+            RefreshToken = refreshToken
         });
     }
     
@@ -119,5 +125,54 @@ public class UsersController(UserManager<ApplicationUser> userManager, Applicati
         }
 
         return BadRequest(ModelState);
+    }
+
+    [HttpPost, AllowAnonymous]
+    [Route("Refresh")]
+    public async Task<ActionResult<AuthResponse>> Refresh([FromBody] TokenRefreshRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        string accessToken = request.AccessToken!;
+        string refreshToken = request.RefreshToken!;
+
+        var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
+
+        //var userName = principal.Identity?.Name;   // this is mapped to the Name claim by default
+        var userId = principal.FindFirstValue("user_id");
+
+        var managedUser = await _userManager.FindByIdAsync(userId!);
+        if (managedUser is null || managedUser.RefreshToken != refreshToken || managedUser.RefreshTokenExpiryTime <= DateTime.Now)
+            return BadRequest("Invalid client request");
+
+        accessToken = _tokenService.CreateToken(managedUser);
+        refreshToken = _tokenService.CreateRefreshToken();
+        managedUser.RefreshToken = refreshToken;
+        managedUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(Convert.ToInt16(_tokenService.GetConfigurationValue("JwtTokenSettings:RefreshExpirationDays")));
+        await _userManager.UpdateAsync(managedUser);
+
+        return Ok(new AuthResponse
+        {
+            Email = managedUser.Email,
+            Token = accessToken,
+            RefreshToken = refreshToken
+        });
+    }
+
+    [HttpPost, Authorize]
+    [Route("Revoke")]
+    public async Task<IActionResult> Revoke()
+    {
+        //var username = ApplicationUser.Identity.id;
+        var userId = "";
+        var managedUser = await _userManager.FindByIdAsync(userId);
+        if (managedUser == null) return BadRequest();
+        managedUser.RefreshToken = null;
+        await _userManager.UpdateAsync(managedUser);
+
+        return NoContent();
     }
 }

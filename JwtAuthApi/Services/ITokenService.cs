@@ -7,6 +7,9 @@ public interface ITokenService
 {
     public string CreateToken(ApplicationUser user);
 
-//    string GenerateRefreshToken();
-//    ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
+    public string CreateRefreshToken();
+
+    public ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
+
+    public Object? GetConfigurationValue(string key);
 }
